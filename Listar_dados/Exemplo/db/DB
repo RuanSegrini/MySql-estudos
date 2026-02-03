@@ -1,0 +1,99 @@
+package db; 
+// pacote onde ficam classes relacionadas a banco de dados
+
+import java.io.FileInputStream; 
+// serve para ler arquivos do computador (db.properties)
+
+import java.io.IOException; 
+// erro caso dê problema ao ler o arquivo
+
+import java.sql.*; 
+// importa tudo do JDBC (Connection, Statement, ResultSet etc)
+
+import java.util.Properties; 
+// classe usada para ler arquivos .properties (configurações)
+
+public class DB {
+
+    // guarda a conexão ativa do banco
+    // static = única conexão para o programa inteiro
+    private static Connection conn = null;
+
+    // MÉTODO QUE ABRE A CONEXÃO
+    public static Connection getConnection() {
+
+        // se ainda não existe conexão aberta
+        if (conn == null) {
+            try {
+                // carrega o arquivo db.properties
+                Properties props = loadProperties();
+
+                // pega a URL do banco do arquivo
+                String url = props.getProperty("dburl");
+
+                // cria a conexão usando URL + usuário + senha
+                conn = DriverManager.getConnection(url, props);
+
+            } catch (SQLException e) {
+                // erro ao conectar no banco
+                throw new RuntimeException("Erro ao conectar");
+            }
+        }
+
+        // retorna a conexão aberta
+        return conn;
+    }
+
+    // MÉTODO QUE LÊ O ARQUIVO db.properties
+    private static Properties loadProperties() {
+
+        // try-with-resources fecha o arquivo automaticamente
+        try (FileInputStream fs = new FileInputStream("db.properties")) {
+
+            Properties props = new Properties();
+
+            // carrega o conteúdo do arquivo
+            props.load(fs);
+
+            return props;
+
+        } catch (IOException e) {
+            // erro ao ler o arquivo
+            throw new RuntimeException("Erro ao ler db.properties");
+        }
+    }
+
+    // FECHA O RESULTSET (resultado do SELECT)
+    public static void closeResultSet(ResultSet rs) {
+        if (rs != null) {
+            try {
+                rs.close(); // fecha o resultado
+            } catch (SQLException e) {
+                throw new RuntimeException("Erro ao fechar ResultSet");
+            }
+        }
+    }
+
+    // FECHA O STATEMENT (comando SQL)
+    public static void closeStatement(Statement st) {
+        if (st != null) {
+            try {
+                st.close(); // fecha o comando
+            } catch (SQLException e) {
+                throw new RuntimeException("Erro ao fechar Statement");
+            }
+        }
+    }
+
+    // FECHA A CONEXÃO COM O BANCO
+    public static void closeConnection() {
+        if (conn != null) {
+            try {
+                conn.close(); // fecha a conexão
+            } catch (SQLException e) {
+                throw new RuntimeException("Erro ao fechar conexão");
+            }
+        }
+    }
+}
+
